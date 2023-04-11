@@ -14,6 +14,10 @@ bl_info = {
 
 
 import bpy
+from . import preferences
+
+from . import __refresh__
+__refresh__.reload_modules()
 
 
 class MESH_OT_just_delete_component(bpy.types.Operator):
@@ -34,12 +38,14 @@ class MESH_OT_just_delete_component(bpy.types.Operator):
 
     def execute(self, context):
         mode = context.tool_settings.mesh_select_mode
-        if mode[0]:
-            bpy.ops.mesh.delete(type='VERT')
-        if mode[1]:
-            bpy.ops.mesh.delete(type='EDGE')
+
+        # TODO revert if prefs "ALL"
         if mode[2]:
             bpy.ops.mesh.delete(type='FACE')
+        if mode[1]:
+            bpy.ops.mesh.delete(type='EDGE')
+        if mode[0]:
+            bpy.ops.mesh.delete(type='VERT')
 
         return {'FINISHED'}
 
@@ -51,25 +57,17 @@ def add_delete_to_menu(self, context):
 
 
 def register():
+    preferences.register_classes()
     bpy.utils.register_class(MESH_OT_just_delete_component)
     bpy.types.VIEW3D_MT_edit_mesh.append(add_delete_to_menu)
 
-    # mostly to get the keymap working
-    kc = bpy.context.window_manager.keyconfigs.addon
-    if kc:
-        km = kc.keymaps.new(name="Mesh")
-        kmi = km.keymap_items.new(MESH_OT_just_delete_component.bl_idname, 'DEL', 'PRESS')
+    preferences.register_shortcut(MESH_OT_just_delete_component.bl_idname)
+
 
 
 def unregister():
-    # mostly to remove the keymap
-    kc = bpy.context.window_manager.keyconfigs.addon
-    if kc:
-        km = kc.keymaps.get('Mesh')
-        if km is not None:
-            for kmi in km.keymap_items:
-                if kmi.idname == MESH_OT_just_delete_component.bl_idname:
-                    km.keymap_items.remove(kmi)
+    
+    preferences.unregister_classes()
 
     bpy.utils.unregister_class(MESH_OT_just_delete_component)
     bpy.types.VIEW3D_MT_edit_mesh.remove(add_delete_to_menu)
