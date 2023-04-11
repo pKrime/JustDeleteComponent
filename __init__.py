@@ -14,6 +14,7 @@ bl_info = {
 
 
 import bpy
+import bmesh
 from . import preferences
 
 from . import __refresh__
@@ -38,18 +39,43 @@ class MESH_OT_just_delete_component(bpy.types.Operator):
 
     def execute(self, context):
         order = ['VERT', 'EDGE', 'FACE']
+        mode = context.tool_settings.mesh_select_mode
+
+        selected_verts = []
+        selected_edges = []
 
         prefs = bpy.context.preferences.addons[__package__].preferences
         if prefs.multi_policy == 'FEV':
             order.reverse()
             indexed_modes = zip(range(len(order) - 1, -1, -1), order)
+
+            if mode[2]:
+                bm = bmesh.from_edit_mesh(context.object.data)
+                vertices= [v for v in bm.verts]
+                edges = [e for e in bm.edges]
+
+                if not mode[0]:
+                    selected_edges = [e.index for e in edges if e.select]
+
+                if not selected_edges:
+                    selected_verts = [v.index for v in vertices if v.select]
         else:
             indexed_modes = zip(range(len(order)), order)
-      
-        mode = context.tool_settings.mesh_select_mode
+
         for i, sel_type in indexed_modes:
             if mode[i]:
                 bpy.ops.mesh.delete(type=sel_type)
+
+            for edge in selected_edges:
+                bm.edges[edge].select = True
+                selected_edges.clear()
+
+        for vert in selected_verts:
+            bm.verts[vert].select = True
+
+
+
+
 
         return {'FINISHED'}
 
