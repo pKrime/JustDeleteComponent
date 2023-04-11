@@ -37,15 +37,19 @@ class MESH_OT_just_delete_component(bpy.types.Operator):
         return ob.type == 'MESH' and ob.mode == 'EDIT'
 
     def execute(self, context):
-        mode = context.tool_settings.mesh_select_mode
+        order = ['VERT', 'EDGE', 'FACE']
 
-        # TODO revert if prefs "ALL"
-        if mode[2]:
-            bpy.ops.mesh.delete(type='FACE')
-        if mode[1]:
-            bpy.ops.mesh.delete(type='EDGE')
-        if mode[0]:
-            bpy.ops.mesh.delete(type='VERT')
+        prefs = bpy.context.preferences.addons[__package__].preferences
+        if prefs.multi_policy == 'FEV':
+            order.reverse()
+            indexed_modes = zip(range(len(order) - 1, -1, -1), order)
+        else:
+            indexed_modes = zip(range(len(order)), order)
+      
+        mode = context.tool_settings.mesh_select_mode
+        for i, sel_type in indexed_modes:
+            if mode[i]:
+                bpy.ops.mesh.delete(type=sel_type)
 
         return {'FINISHED'}
 

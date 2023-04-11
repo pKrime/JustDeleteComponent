@@ -29,12 +29,13 @@ class JustDeletePrefs(bpy.types.AddonPreferences):
     bl_idname = __package__
 
     multi_policy: bpy.props.EnumProperty(
-        name="Multi-select policy",
+        name="Multi-component select preference",
         items=[
-        ("ALL", "All", "", 1),
-        ("FEV", "Face, then Edges, then Verts", "", 2),
+        ("VEF", "Vertices, then Edges, then Faces", "", 1),
+        ("FEV", "Faces, then Edges, then Vertices", "", 2),
         ],
-        description="Policy to apply in case multiple component types can be selected"
+        description="Order preference in case of multi-component selection",
+        default='FEV'
     )
 
     del_shortcut: bpy.props.EnumProperty(
